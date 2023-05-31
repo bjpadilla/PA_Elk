@@ -1,0 +1,2089 @@
+---
+title: "Model Fitting and Model Selection"
+author: "Benjamin Padilla"
+date: "2023-06-01"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Model Formulas 
+```{r,eval = FALSE}
+form.1 <-  #########
+case_ ~  -1 + SEX * (logSL + cosTA) + 
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) 
+#####
+
+form.elv <-  #########
+case_ ~  -1 + SEX * (elev + logSL + cosTA) + 
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_elev, elev, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) 
+#####
+
+form.elvSQ <-  #########
+case_ ~  -1 + SEX * (elev + elevSQ + logSL + cosTA) + 
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_elev, elev, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_elevSQ, elevSQ, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) 
+#####
+ 
+form.slp <-  #########
+case_ ~  -1 + SEX * (slope_end + logSL + cosTA) + 
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_slope, slope_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) 
+##### 
+
+form.can <-  #########
+case_ ~  -1 + SEX * (canopy + logSL + cosTA) + 
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_canopy, canopy, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) 
+##### 
+
+form.ndvi <-  #########
+case_ ~  -1 + SEX * (NDVI_end + NDVI_sq + logSL + cosTA) + 
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVI, NDVI_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVIsd, NDVI_sq, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05))))
+##### 
+
+formula.top.ndv.can <-  #########
+case_ ~  -1 + SEX * (elev + elevSQ + slope_end + canopy + NDVI_end + NDVI_sq + logSL + cosTA) +
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  # effect for elevation
+  f(anim_elev, elev, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_elevSQ, elevSQ, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_slope, slope_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_canopy, canopy, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVI, NDVI_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVIsd, NDVI_sq, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_dev, developed, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_egmi, evg.mix, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_gras, grass.shrub, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_agri, agriculture, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_deci, deciduous, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05))))
+######
+
+form.fst.ope <-  #########
+case_ ~  -1 + SEX * (forest + open + logSL + cosTA) + 
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_forest, forest, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_open, open, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05))))
+##### 
+
+formula.hab <-  #########
+case_ ~  -1 + SEX * (logSL + cosTA + deciduous + evg.mix + grass.shrub + agriculture + developed) +
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  f(anim_dev, developed, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_deci, deciduous, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_egmi, evg.mix, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_gras, grass.shrub, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_agri, agriculture, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) 
+#####
+
+formula.full.F.O <-  #########
+case_ ~  -1 + SEX * (elev + elevSQ + slope_end + canopy + NDVI_end + NDVI_sq + forest + open + logSL + cosTA) +
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  # effect for elevation
+  f(anim_elev, elev, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_elevSQ, elevSQ, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_slope, slope_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_canopy, canopy, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVI, NDVI_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVIsd, NDVI_sq, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_open, open, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_forest, forest, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05))))
+######
+
+formula.full._eSQ <-  #########
+case_ ~  -1 + SEX * (elev + slope_end + canopy + NDVI_end + NDVI_sq + developed + deciduous + evg.mix + grass.shrub + agriculture+ logSL + cosTA) +
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  # effect for elevation
+  f(anim_elev, elev, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_slope, slope_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_canopy, canopy, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVI, NDVI_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVIsd, NDVI_sq, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_dev, developed, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_egmi, evg.mix, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_gras, grass.shrub, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_agri, agriculture, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_deci, deciduous, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05))))
+######
+
+formula.full_noagdev <-  #########
+case_ ~  -1 + SEX * (elev + elevSQ + slope_end + canopy + NDVI_end + NDVI_sq + deciduous + evg.mix + grass.shrub+ logSL + cosTA) +
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  # effect for elevation
+  f(anim_elev, elev, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_elevSQ, elevSQ, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_slope, slope_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_canopy, canopy, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVI, NDVI_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVIsd, NDVI_sq, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_egmi, evg.mix, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_gras, grass.shrub, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_deci, deciduous, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05))))
+
+formula.full <-  #########
+case_ ~  -1 + SEX * (elev + elevSQ + slope_end + canopy + NDVI_end + NDVI_sq + developed + deciduous + evg.mix + grass.shrub + agriculture+ logSL + cosTA) +
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  # effect for elevation
+  f(anim_elev, elev, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_elevSQ, elevSQ, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_slope, slope_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_canopy, canopy, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVI, NDVI_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVIsd, NDVI_sq, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_dev, developed, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_egmi, evg.mix, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_gras, grass.shrub, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_agri, agriculture, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_deci, deciduous, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05))))
+######
+
+formula.TOD <-  #########
+case_ ~  -1 + tod_end_ * (elev + elevSQ + slope_end + canopy + NDVI_end + NDVI_sq + developed + deciduous + evg.mix + grass.shrub + agriculture+ logSL + cosTA) +
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  # effect for elevation
+  f(anim_elev, elev, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_elevSQ, elevSQ, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_slope, slope_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_canopy, canopy, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVI, NDVI_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVIsd, NDVI_sq, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_dev, developed, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_egmi, evg.mix, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_gras, grass.shrub, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_agri, agriculture, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_deci, deciduous, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05))))
+######
+```
+
+# Data Preparation
+
+```{r,eval = FALSE}
+# Load in the model data and sort accordingly ####
+mod_data <- read.csv("Seasonal_SSF_Analysis/inla_mod_data_prj2.csv")
+# Create animal ID not animal ID year
+mod_data$animal_ID <- substr(mod_data$ID_year,1,nchar(mod_data$ID_year)-5)
+# we will use animal ID rather than ID year here as random effect
+mod_data$anim <- as.numeric(as.factor(mod_data$ID_year))
+mod_data$anim_agri <- mod_data$anim
+mod_data$anim_canopy <- mod_data$anim
+mod_data$animcover <- mod_data$anim
+mod_data$anim_deci <- mod_data$anim
+mod_data$anim_dev <- mod_data$anim
+mod_data$anim_egmi <- mod_data$anim
+mod_data$anim_elev <- mod_data$anim
+mod_data$anim_gras <- mod_data$anim
+mod_data$anim_slope <- mod_data$anim
+mod_data$anim_NDVI <- mod_data$anim
+mod_data$anim_NDVIsd <- mod_data$anim
+mod_data$anim_forest <- mod_data$anim
+mod_data$anim_open <- mod_data$anim
+mod_data$anim_timber <- mod_data$anim
+mod_data$anim_NDVIsd <- mod_data$anim
+mod_data$anim_SL <- mod_data$anim
+mod_data$anim_TA <- mod_data$anim
+mod_data$anim_TOD <- mod_data$anim
+
+ 
+# Create a factor for sex and random effect feature
+mod_data$SEX <- factor(ifelse(mod_data$sex == 1, "female","male"))
+mod_data$elksex <- as.factor(mod_data$sex)
+mod_data$anim_sex <- mod_data$anim
+
+
+
+mod_data$elevSQ <- mod_data$elev^2
+mod_data$anim_elevSQ <- mod_data$anim
+mod_data$NDVI_sq <- mod_data$NDVI_end ^2
+
+# convert steps from degrees latitude to meters
+mod_data$SL <- (2*pi*6371000*mod_data$sl_)/360
+mod_data$logSL <- ifelse(log(mod_data$SL)<0,NA,log(mod_data$SL))
+
+# compute cosine of turn angle
+mod_data$cosTA <- cos(mod_data$ta_)
+
+# create individual landcover variables 
+mod_data$developed <- ifelse(mod_data$covertype == 1, 1, 0)
+mod_data$deciduous <- ifelse(mod_data$covertype == 2, 1, 0)
+mod_data$evg.mix <- ifelse(mod_data$covertype == 3, 1, 0)
+mod_data$grass.shrub <- ifelse(mod_data$covertype == 4, 1, 0)
+mod_data$agriculture <- ifelse(mod_data$covertype == 5, 1, 0)
+
+# Create Forest and Open broader categories ####
+mod_data$forest <- mod_data$deciduous + mod_data$evg.mix
+mod_data$open <- mod_data$grass.shrub + mod_data$agriculture
+
+# set mean and precision for the strata ID
+mean.beta <- 0
+prec.beta <- 1e-4
+
+# set the # of individuals
+n.indivs <- length(unique(mod_data$ID_year))
+```
+
+# Model Fitting and Selection
+
+## Female-Male: Year Round
+```{r,eval = FALSE}
+m.1 <- #####
+inla(form.1, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.elv <- #####
+inla(form.elv, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.elvSQ <- #####
+inla(form.elvSQ, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.slp <- #####
+inla(form.slp, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.can <- #####
+inla(form.can, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.ndvi <- #####
+inla(form.ndvi, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.top.ndv.can <- #####
+inla(formula.top.ndv.can, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.fst.ope <- #####
+inla(form.fst.ope, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.hab <- #####
+inla(formula.hab, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.full.F.O <- #####
+inla(formula.full.F.O, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.full_eSQ <- #####
+inla(formula.full._eSQ, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.full_noagdev <- #####
+inla(formula.full_noagdev, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.full <- #####
+inla(formula.full, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE,
+       config = TRUE,
+       cpo = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+m.TOD <- #####
+inla(formula.TOD, 
+     family ="Poisson", data = mod_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+```
+
+```{r, eval = FALSE}
+mod.list <- list("m.1" = m.1,
+                 "m.can" = m.can,
+                 "m.elv" = m.elv,
+                 "m.elvSQ" = m.elvSQ,
+                 "m.ndvi" = m.ndvi,
+                 "m.slp" = m.slp,
+                 "m.hab" = m.hab,
+                 "m.fst.ope" = m.fst.ope,
+                 "m.top.ndv.can" = m.top.ndv.can,
+                 "m.full_eSQ" = m.full_eSQ,
+                 "m.full.F.O" = m.full.F.O,
+                 "m.nodevag" = m.full_noagdev,
+                 "m.full" = m.full)
+waic.seasons <- data.frame("model" = names(mod.list))
+for(i in 1:length(mod.list)){
+  m.temp <- mod.list[[i]]
+  waic.seasons$WAIC_annual[i] <- m.temp$waic$waic
+  waic.seasons$p.eff_annual[i] <- m.temp$waic$p.eff
+  waic.seasons$mlik_annual[i] <- m.temp$mlik[2]
+}
+waic.seasons[order(waic.seasons$WAIC_annual),]
+
+DIC.vals <- data.frame("model" = names(mod.list))
+for(i in 1:length(mod.list)){
+  m.temp <- mod.list[[i]]
+  DIC.vals$DIC_annual[i] <- m.temp$dic$dic
+  DIC.vals$p.eff_annual[i] <- m.temp$dic$p.eff
+}
+DIC.vals[order(DIC.vals$DIC_annual),]
+```
+
+## Female-Male: Winter
+```{r, eval = FALSE}
+seas_data <- mod_data %>% filter(season == "Winter")
+
+W.1 <- #####
+inla(form.1, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.elv <- #####
+inla(form.elv, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.elvSQ <- #####
+inla(form.elvSQ, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.slp <- #####
+inla(form.slp, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.can <- #####
+inla(form.can, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.ndvi <- #####
+inla(form.ndvi, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.top.ndv.can <- #####
+inla(formula.top.ndv.can, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.fst.ope <- #####
+inla(form.fst.ope, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.hab <- #####
+inla(formula.hab, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.full.F.O <- #####
+inla(formula.full.F.O, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.full_eSQ <- #####
+inla(formula.full._eSQ, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.full_noagdev <- #####
+inla(formula.full_noagdev, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.full <- #####
+inla(formula.full, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       config = TRUE,
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+W.TOD <- #####
+inla(formula.TOD, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+```
+
+```{r, eval = FALSE}
+w.mod.list <- list("W.1" = W.1,
+                 "W.can" = W.can,
+                 "W.elv" = W.elv,
+                 "W.elvSQ" = W.elvSQ,
+                 "W.ndvi" = W.ndvi,
+                 "W.slp" = W.slp,
+                 "W.hab" = W.hab,
+                 "W.fst.ope" = W.fst.ope,
+                 "W.top.ndv.can" = W.top.ndv.can,
+                 "W.full_eSQ" = W.full_eSQ,
+                 "W.full.F.O" = W.full.F.O,
+                 "W.nodevag" = W.full_noagdev,
+                 "W.full" = W.full)
+# waic.seasons <- data.frame("model" = names(w.mod.list))
+for(i in 1:length(w.mod.list)){
+  m.temp <- w.mod.list[[i]]
+  waic.seasons$WAIC_wint[i] <- m.temp$waic$waic
+  waic.seasons$p.eff_wint[i] <- m.temp$waic$p.eff
+}
+waic.seasons[order(waic.seasons$WAIC_wint),]
+
+for(i in 1:length(w.mod.list)){
+  m.temp <- w.mod.list[[i]]
+  DIC.vals$DIC_wint[i] <- m.temp$dic$dic
+  DIC.vals$p.eff_wint[i] <- m.temp$dic$p.eff
+}
+DIC.vals[order(DIC.vals$DIC_wint),]
+summary(W.top.ndv.can)
+```
+
+## Female-Male: Spring
+```{r, eval = FALSE} 
+seas_data <- mod_data %>% filter(season == "Spring")
+
+Sp.1 <- #####
+inla(form.1, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Sp.elv <- #####
+inla(form.elv, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Sp.elvSQ <- #####
+inla(form.elvSQ, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Sp.slp <- #####
+inla(form.slp, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Sp.can <- #####
+inla(form.can, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Sp.ndvi <- #####
+inla(form.ndvi, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Sp.top.ndv.can <- #####
+inla(formula.top.ndv.can, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Sp.fst.ope <- #####
+inla(form.fst.ope, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Sp.hab <- #####
+inla(formula.hab, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Sp.full.F.O <- #####
+inla(formula.full.F.O, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Sp.full_eSQ <- #####
+inla(formula.full._eSQ, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Sp.full_noagdev <- #####
+inla(formula.full_noagdev, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Sp.full <- #####
+inla(formula.full, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       config = TRUE,
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+```
+
+```{r, eval = FALSE}
+Sp.mod.list <- list("Sp.1" = Sp.1,
+                 "Sp.can" = Sp.can,
+                 "Sp.elv" = Sp.elv,
+                 "Sp.elvSQ" = Sp.elvSQ,
+                 "Sp.ndvi" = Sp.ndvi,
+                 "Sp.slp" = Sp.slp,
+                 "Sp.hab" = Sp.hab,
+                 "Sp.fst.ope" = Sp.fst.ope,
+                 "Sp.top.ndv.can" = Sp.top.ndv.can,
+                 "Sp.full_eSQ" = Sp.full_eSQ,
+                 "Sp.full.F.O" = Sp.full.F.O,
+                 "Sp.nodevag" = Sp.full_noagdev,
+                 "Sp.full" = Sp.full)
+#waic.seasons <- data.frame("model" = names(Sp.mod.list))
+for(i in 1:length(Sp.mod.list)){
+  m.temp <- Sp.mod.list[[i]]
+  waic.seasons$WAIC_spring[i] <- m.temp$waic$waic
+  waic.seasons$p.eff_spring[i] <- m.temp$waic$p.eff
+}
+waic.seasons[order(waic.seasons$WAIC_spring),]
+
+for(i in 1:length(Sp.mod.list)){
+  m.temp <- Sp.mod.list[[i]]
+  DIC.vals$DIC_spring[i] <- m.temp$dic$dic
+  DIC.vals$p.eff_spring[i] <- m.temp$dic$p.eff
+}
+DIC.vals[order(DIC.vals$DIC_spring),]
+
+```
+
+
+## Female-Male: Summer
+```{r, eval = FALSE}
+seas_data <- mod_data %>% filter(season == "Summer")
+
+Su.1 <- #####
+inla(form.1, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Su.elv <- #####
+inla(form.elv, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Su.elvSQ <- #####
+inla(form.elvSQ, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Su.slp <- #####
+inla(form.slp, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Su.can <- #####
+inla(form.can, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Su.ndvi <- #####
+inla(form.ndvi, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Su.top.ndv.can <- #####
+inla(formula.top.ndv.can, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Su.fst.ope <- #####
+inla(form.fst.ope, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Su.hab <- #####
+inla(formula.hab, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Su.full.F.O <- #####
+inla(formula.full.F.O, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Su.full_eSQ <- #####
+inla(formula.full._eSQ, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Su.full_noagdev <- #####
+inla(formula.full_noagdev, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Su.full <- #####
+inla(formula.full, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       config = TRUE,
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+```
+
+```{r, eval = FALSE}
+Su.mod.list <- list("Su.1" = Su.1,
+                 "Su.can" = Su.can,
+                 "Su.elv" = Su.elv,
+                 "Su.elvSQ" = Su.elvSQ,
+                 "Su.ndvi" = Su.ndvi,
+                 "Su.slp" = Su.slp,
+                 "Su.hab" = Su.hab,
+                 "Su.fst.ope" = Su.fst.ope,
+                 "Su.top.ndv.can" = Su.top.ndv.can,
+                 "Su.full_eSQ" = Su.full_eSQ,
+                 "Su.full.F.O" = Su.full.F.O,
+                 "Su.nodevag" = Su.full_noagdev,
+                 "Su.full" = Su.full)
+for(i in 1:length(Su.mod.list)){
+  m.temp <- Su.mod.list[[i]]
+  waic.seasons$WAIC_summer[i] <- m.temp$waic$waic
+  waic.seasons$p.eff_summer[i] <- m.temp$waic$p.eff
+}
+waic.seasons[order(waic.seasons$WAIC_summer),]
+
+for(i in 1:length(Su.mod.list)){
+  m.temp <- Su.mod.list[[i]]
+  DIC.vals$DIC_summer[i] <- m.temp$dic$dic
+  DIC.vals$p.eff_summer[i] <- m.temp$dic$p.eff
+}
+DIC.vals[order(DIC.vals$DIC_summer),]
+
+```
+
+## Female-Male: Autumn
+
+```{r, eval = FALSE}
+seas_data <- mod_data %>% filter(season == "Autumn")
+
+Fa.1 <- #####
+inla(form.1, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Fa.elv <- #####
+inla(form.elv, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Fa.elvSQ <- #####
+inla(form.elvSQ, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Fa.slp <- #####
+inla(form.slp, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Fa.can <- #####
+inla(form.can, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Fa.ndvi <- #####
+inla(form.ndvi, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Fa.top.ndv.can <- #####
+inla(formula.top.ndv.can, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Fa.fst.ope <- #####
+inla(form.fst.ope, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Fa.hab <- #####
+inla(formula.hab, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Fa.full.F.O <- #####
+inla(formula.full.F.O, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Fa.full_eSQ <- #####
+inla(formula.full._eSQ, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Fa.full_noagdev <- #####
+inla(formula.full_noagdev, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+
+Fa.full <- #####
+inla(formula.full, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       config = TRUE,
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+```
+
+```{r, eval = FALSE}
+Fa.mod.list <- list("Fa.1" = Fa.1,
+                 "Fa.can" = Fa.can,
+                 "Fa.elv" = Fa.elv,
+                 "Fa.elvSQ" = Fa.elvSQ,
+                 "Fa.ndvi" = Fa.ndvi,
+                 "Fa.slp" = Fa.slp,
+                 "Fa.hab" = Fa.hab,
+                 "Fa.fst.ope" = Fa.fst.ope,
+                 "Fa.top.ndv.can" = Fa.top.ndv.can,
+                 "Fa.full_eSQ" = Fa.full_eSQ,
+                 "Fa.full.F.O" = Fa.full.F.O,
+                 "Fa.nodevag" = Fa.full_noagdev,
+                 "Fa.full" = Fa.full)
+for(i in 1:length(Fa.mod.list)){
+  m.temp <- Fa.mod.list[[i]]
+  waic.seasons$WAIC_autumn[i] <- m.temp$waic$waic
+  waic.seasons$p.eff_autumn[i] <- m.temp$waic$p.eff
+}
+
+waic.seasons[order(waic.seasons$WAIC_autumn),]
+
+for(i in 1:length(Fa.mod.list)){
+  m.temp <- Fa.mod.list[[i]]
+  DIC.vals$DIC_fall[i] <- m.temp$dic$dic
+  DIC.vals$p.eff_fall[i] <- m.temp$dic$p.eff
+}
+DIC.vals[order(DIC.vals$DIC_fall),]
+```
+
+# Create a data object of model output and save it
+
+```{r, eval = FALSE}
+mods_lists <- list(mod.list,
+                   w.mod.list,
+                   Sp.mod.list,
+                   Su.mod.list,
+                   Fa.mod.list)
+save(mods_lists, file = "SSF_mods_08062021.Rdata")
+
+top_mods <- list(m.full,W.full,Sp.full,Su.full,Fa.full)
+```
+
+# Fit seasonal Time-of-Day models
+
+```{r, eval = FALSE}
+lcs <- inla.make.lincombs(
+        tod_end_ = c( "day", "night"))
+        
+formula.TOD <-  #########
+case_ ~  -1 + tod_end_ * (elev + elevSQ + slope_end + canopy + NDVI_end + NDVI_sq + developed + deciduous + evg.mix + grass.shrub + agriculture+ logSL + cosTA) +
+  # random effect for step ID
+  f(step_id_, model="iid", hyper=list(theta = list(initial=log(1e-6),fixed=T))) + 
+  # effect for elevation
+  f(anim_elev, elev, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_elevSQ, elevSQ, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_slope, slope_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  # effect for slope
+  f(anim_canopy, canopy, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVI, NDVI_end, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_NDVIsd, NDVI_sq, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_dev, developed, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_egmi, evg.mix, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_gras, grass.shrub, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_agri, agriculture, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_deci, deciduous, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_SL, logSL, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05)))) +
+  f(anim_TA, cosTA, values=1:n.indivs, model="iid",  
+    hyper=list(theta=list(initial=log(1), fixed = F,prior = "pc.prec", param = c(3,0.05))))
+tod.DATA <- m.TOD$.args$data
+system.time(
+m.TOD <- #####
+inla(formula.TOD, 
+     family ="Poisson", data = tod.DATA, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       config = TRUE,
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) ) #####
+
+seas_data <- tod.DATA %>% filter(season == "Winter")
+W.TOD <- #####
+inla(formula.TOD, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       config = TRUE,
+       dic = TRUE
+     ),
+     verbose = TRUE
+) #####
+seas_data <- tod.DATA %>% filter(season == "Spring")
+SP.TOD <- #####
+inla(formula.TOD, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       config = TRUE,
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+seas_data <- tod.DATA %>% filter(season == "Summer")
+SU.TOD <- #####
+inla(formula.TOD, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       config = TRUE,
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+) #####
+seas_data <- tod.DATA %>% filter(season == "Autumn")
+FA.TOD <- #####
+inla(formula.TOD, 
+     family ="Poisson", data = seas_data, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+       waic = TRUE,
+       dic = TRUE, 
+       config = TRUE
+     ),
+     verbose = FALSE
+) #####
+system.time(
+m.TOD <- #####
+inla(formula.TOD, 
+     family ="Poisson", data = tod.DATA, 
+     control.fixed = list(
+       mean = mean.beta,
+       prec = list(default = prec.beta)
+     ),
+     control.predictor = list(
+       compute = TRUE
+     ),
+     inla.mode = "experimental",
+     control.compute = list(
+             config = TRUE,
+       waic = TRUE,
+       dic = TRUE
+     ),
+     verbose = FALSE
+)) #####
+
+```
+
+
+# Visualizing some data and results - YEAR ROUND 
+
+```{r, message = FALSE, eval = FALSE}
+p.df <- data.frame("mean" = m.full$summary.fitted.values$mean,
+                   "lower" = m.full$summary.fitted.values$`0.025quant`,
+                   "upper" = m.full$summary.fitted.values$`0.975quant`,
+                   "NDVI" = mod_data$NDVI_end,
+                   "Elevation" = mod_data$elev,
+                   "CanopyCover" = mod_data$canopy,
+                   "sex" = mod_data$SEX)
+# fitted vs. NDVI
+ggplot(p.df, aes(x = NDVI, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. NDVI")
+
+# fitted vs. elevation
+ggplot(p.df, aes(x = Elevation, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  xlab("Fitted Value") + ylab("Elevation") + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. Elevation")
+
+# fitted vs. canopy cover
+ggplot(p.df, aes(x = CanopyCover, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  xlab("Fitted Value") + ylab("Canopy Cover") + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. Canopy Cover")
+
+```
+
+# Plotting and Visualization of Winter Results
+
+```{r, message = FALSE, eval = FALSE}
+seas_data <- mod_data %>% filter(season == "Winter")
+p.df <- data.frame("mean" = W.top.ndv.can$summary.fitted.values$mean,
+                   "lower" = W.top.ndv.can$summary.fitted.values$`0.025quant`,
+                   "upper" = W.top.ndv.can$summary.fitted.values$`0.975quant`,
+                   "NDVI" = seas_data$NDVI_end,
+                   "Elevation" = seas_data$elev,
+                   "CanopyCover" = seas_data$canopy,
+                   "sex" = seas_data$SEX)
+# fitted vs. NDVI
+ggplot(p.df, aes(x = NDVI, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. NDVI - Winter")
+
+# fitted vs. elevation
+ggplot(p.df, aes(x = Elevation, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  xlab("Fitted Value") + ylab("Elevation") + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. Elevation - Winter")
+
+# fitted vs. canopy cover
+ggplot(p.df, aes(x = CanopyCover, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  xlab("Fitted Value") + ylab("Canopy Cover") + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. Canopy Cover - Winter")
+
+```
+
+
+# Plotting and Visualization of Spring Results
+
+```{r, message = FALSE, eval = FALSE}
+seas_data <- mod_data %>% filter(season == "Spring")
+p.df <- data.frame("mean" = Sp.full$summary.fitted.values$mean,
+                   "lower" = Sp.full$summary.fitted.values$`0.025quant`,
+                   "upper" = Sp.full$summary.fitted.values$`0.975quant`,
+                   "NDVI" = seas_data$NDVI_end,
+                   "Elevation" = seas_data$elev,
+                   "CanopyCover" = seas_data$canopy,
+                   "Slope" = seas_data$slope_end,
+                   "sex" = seas_data$SEX)
+# fitted vs. NDVI
+ggplot(p.df, aes(x = NDVI, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. NDVI - Spring")
+
+# fitted vs. elevation
+ggplot(p.df, aes(x = Elevation, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  xlab("Fitted Value") + ylab("Elevation") + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. Elevation - Spring")
+
+# fitted vs. canopy cover
+ggplot(p.df, aes(x = CanopyCover, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  xlab("Fitted Value") + ylab("Canopy Cover") + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. Canopy Cover - Spring")
+
+# fitted vs. Slope
+ggplot(p.df, aes(x = Slope, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  xlab("Fitted Value") + ylab("Canopy Cover") + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. Slope - Spring")
+
+```
+
+# Plotting and Visualization of Summer Results
+
+```{r, message = FALSE, eval = FALSE}
+seas_data <- mod_data %>% filter(season == "Summer")
+p.df <- data.frame("mean" = Su.full$summary.fitted.values$mean,
+                   "lower" = Su.full$summary.fitted.values$`0.025quant`,
+                   "upper" = Su.full$summary.fitted.values$`0.975quant`,
+                   "NDVI" = seas_data$NDVI_end,
+                   "Elevation" = seas_data$elev,
+                   "CanopyCover" = seas_data$canopy,
+                   "Slope" = seas_data$slope_end,
+                   "sex" = seas_data$SEX)
+# fitted vs. NDVI
+ggplot(p.df, aes(x = NDVI, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  ylab("Fitted Value") + xlab("NDVI") + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. NDVI - Summer")
+
+# fitted vs. elevation
+ggplot(p.df, aes(x = Elevation, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  ylab("Fitted Value") + xlab("Elevation") + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. Elevation - Summer")
+
+# fitted vs. canopy cover
+ggplot(p.df, aes(x = CanopyCover, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  ylab("Fitted Value") + xlab("Canopy Cover") + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. Canopy Cover - Summer")
+
+# fitted vs. Slope
+ggplot(p.df, aes(x = Slope, y = mean)) + 
+  geom_point(aes(color = sex), alpha = 0.1) + 
+  ylab("Fitted Value") + xlab("Slope") + 
+  geom_smooth(aes(lty = sex)) + ggtitle("Fitted vs. Slope - Summer")
+
+```
+
+
